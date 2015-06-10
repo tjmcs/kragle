@@ -1,0 +1,153 @@
+diff -Naur rhel-server-7.1-x86_64-orig/EFI/BOOT/grub.cfg rhel-server-7.1-x86_64-customized/EFI/BOOT/grub.cfg
+--- rhel-server-7.1-x86_64-orig/EFI/BOOT/grub.cfg	2015-02-19 07:42:07.000000000 -0800
++++ rhel-server-7.1-x86_64-customized/EFI/BOOT/grub.cfg	2015-06-10 07:27:04.724520077 -0700
+@@ -14,18 +14,18 @@
+ insmod part_gpt
+ insmod ext2
+ 
+-set timeout=60
++set timeout=5
+ ### END /etc/grub.d/00_header ###
+ 
+ search --no-floppy --set=root -l 'RHEL-7.1 Server.x86_64'
+ 
+ ### BEGIN /etc/grub.d/10_linux ###
+ menuentry 'Install Red Hat Enterprise Linux 7.1' --class fedora --class gnu-linux --class gnu --class os {
+-	linuxefi /images/pxeboot/vmlinuz inst.stage2=hd:LABEL=RHEL-7.1\x20Server.x86_64 quiet
++	linuxefi /images/pxeboot/vmlinuz inst.stage2=hd:LABEL=RHEL-7.1\x20Server.x86_64
+ 	initrdefi /images/pxeboot/initrd.img
+ }
+-menuentry 'Test this media & install Red Hat Enterprise Linux 7.1' --class fedora --class gnu-linux --class gnu --class os {
+-	linuxefi /images/pxeboot/vmlinuz inst.stage2=hd:LABEL=RHEL-7.1\x20Server.x86_64 rd.live.check quiet
++menuentry 'Automated Install of Red Hat Enterprise Linux 7.1' --class fedora --class gnu-linux --class gnu --class os {
++	linuxefi /images/pxeboot/vmlinuz inst.stage2=hd:LABEL=RHEL-7.1\x20Server.x86_64 inst.ks=hd:LABEL=RHEL-7.1\x20Server.x86_64:/kickstart/ks-uefi.cfg
+ 	initrdefi /images/pxeboot/initrd.img
+ }
+ submenu 'Troubleshooting -->' {
+diff -Naur rhel-server-7.1-x86_64-orig/isolinux/isolinux.cfg rhel-server-7.1-x86_64-customized/isolinux/isolinux.cfg
+--- rhel-server-7.1-x86_64-orig/isolinux/isolinux.cfg	2015-02-19 07:42:07.000000000 -0800
++++ rhel-server-7.1-x86_64-customized/isolinux/isolinux.cfg	2015-06-10 08:42:04.936136234 -0700
+@@ -1,5 +1,5 @@
+ default vesamenu.c32
+-timeout 600
++timeout 50
+ 
+ display boot.msg
+ 
+@@ -61,13 +61,13 @@
+ label linux
+   menu label ^Install Red Hat Enterprise Linux 7.1
+   kernel vmlinuz
+-  append initrd=initrd.img inst.stage2=hd:LABEL=RHEL-7.1\x20Server.x86_64 quiet
++  append initrd=initrd.img inst.stage2=hd:LABEL=RHEL-7.1\x20Server.x86_64
+ 
+-label check
+-  menu label Test this ^media & install Red Hat Enterprise Linux 7.1
++label unattended
++  menu label ^Automated Install of Red Hat Enterprise Linux 7.1
+   menu default
+   kernel vmlinuz
+-  append initrd=initrd.img inst.stage2=hd:LABEL=RHEL-7.1\x20Server.x86_64 rd.live.check quiet
++  append initrd=initrd.img inst.stage2=hd:LABEL=RHEL-7.1\x20Server.x86_64 ks=hd:LABEL=RHEL-7.1\x20Server.x86_64:/kickstart/ks-isolinux.cfg
+ 
+ menu separator # insert an empty line
+ 
+diff -Naur rhel-server-7.1-x86_64-orig/kickstart/ks-isolinux.cfg rhel-server-7.1-x86_64-customized/kickstart/ks-isolinux.cfg
+--- rhel-server-7.1-x86_64-orig/kickstart/ks-isolinux.cfg	1969-12-31 16:00:00.000000000 -0800
++++ rhel-server-7.1-x86_64-customized/kickstart/ks-isolinux.cfg	2015-06-10 08:54:20.677063309 -0700
+@@ -0,0 +1,45 @@
++#version=RHEL7
++
++# install a fresh system
++install
++# Use CDROM installation media
++cdrom
++# Perform a text-based install
++text
++# System language
++lang en_US.UTF-8
++# Keyboard layouts
++keyboard --vckeymap=us --xlayouts='us'
++# Root password
++rootpw --iscrypted $6$8z2.xKRx6YdOvRDP$BwfVHPhTed9HtUA3oBJM.Y0tVppkzZLloOj5TkKojWgKsG4BJJaiM/bbQioqxUbuIaSKTMQ4aOvJG2FB9oVBS.
++# Network information
++network  --bootproto=static --device=enp0s25 --gateway=172.17.16.1 --ip=172.17.16.11 --nameserver=172.17.10.22 --netmask=255.255.255.0 --onboot=on --ipv6=auto --hostname=localhost.localdomain
++# System authorization information
++auth --enableshadow --passalgo=sha512
++# System timezone
++timezone America/New_York --isUtc
++# System bootloader configuration
++bootloader --location=mbr --driveorder=sda --append=crashkernel=auto rhgb quiet
++# Ignore all but the first disk (sda) during the install
++ignoredisk --only-use=sda
++# Partition clearing information
++clearpart --drives=sda --all
++zerombr
++# Disk partitioning information
++part /boot/efi --fstype="efi" --ondisk=sda --size=200 --fsoptions="umask=0077,shortname=winnt"
++part /boot --fstype="xfs" --ondisk=sda --size=500
++part pv.343 --fstype="lvmpv" --ondisk=sda --size=1 --grow
++volgroup rhel --pesize=4096 pv.343
++logvol swap  --fstype="swap" --size=8000 --name=swap --vgname=rhel
++logvol /home  --fstype="xfs" --size=51200 --name=home --vgname=rhel
++logvol /  --fstype="xfs" --size=1 --name=root --vgname=rhel --grow
++# poweroff automatically at the end of the installation process
++poweroff
++# define packages to install
++%packages
++@core
++kexec-tools
++%end
++# add 'kdump' add-on to the install
++%addon com_redhat_kdump --enable --reserve-mb='auto'
++%end
+diff -Naur rhel-server-7.1-x86_64-orig/kickstart/ks-uefi.cfg rhel-server-7.1-x86_64-customized/kickstart/ks-uefi.cfg
+--- rhel-server-7.1-x86_64-orig/kickstart/ks-uefi.cfg	1969-12-31 16:00:00.000000000 -0800
++++ rhel-server-7.1-x86_64-customized/kickstart/ks-uefi.cfg	2015-06-10 08:52:50.479901159 -0700
+@@ -0,0 +1,46 @@
++#version=RHEL7
++
++# install a fresh system
++install
++# Use CDROM installation media
++cdrom
++# Perform a text-based install
++text
++# System language
++lang en_US.UTF-8
++# Keyboard layouts
++keyboard --vckeymap=us --xlayouts='us'
++# Root password
++rootpw --iscrypted $6$8z2.xKRx6YdOvRDP$BwfVHPhTed9HtUA3oBJM.Y0tVppkzZLloOj5TkKojWgKsG4BJJaiM/bbQioqxUbuIaSKTMQ4aOvJG2FB9oVBS.
++# Network information
++network  --bootproto=static --device=enp0s25 --gateway=172.17.16.1 --ip=172.17.16.11 --nameserver=172.17.10.22 --netmask=255.255.255.0 --onboot=on --ipv6=auto --hostname=localhost.localdomain
++# System authorization information
++auth --enableshadow --passalgo=sha512
++# System timezone
++timezone America/New_York --isUtc
++# System bootloader configuration
++bootloader --location=mbr --driveorder=sda --append=crashkernel=auto rhgb quiet
++# Ignore all but the first disk (sda) during the install
++ignoredisk --only-use=sda
++# Partition clearing information
++clearpart --drives=sda --all
++zerombr
++# Disk partitioning information
++part biosboot --fstype=biosboot --size=1
++part /boot/efi --fstype="efi" --ondisk=sda --size=200 --fsoptions="umask=0077,shortname=winnt"
++part /boot --fstype="xfs" --ondisk=sda --size=500
++part pv.343 --fstype="lvmpv" --ondisk=sda --size=1 --grow
++volgroup rhel --pesize=4096 pv.343
++logvol swap  --fstype="swap" --size=8000 --name=swap --vgname=rhel
++logvol /home  --fstype="xfs" --size=51200 --name=home --vgname=rhel
++logvol /  --fstype="xfs" --size=1 --name=root --vgname=rhel --grow
++# poweroff automatically at the end of the installation process
++poweroff
++# define packages to install
++%packages
++@core
++kexec-tools
++%end
++# add 'kdump' add-on to the install
++%addon com_redhat_kdump --enable --reserve-mb='auto'
++%end
