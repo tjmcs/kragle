@@ -58,7 +58,6 @@ system):
 
 ```bash
 mount -o loop rhel-server-7.1-x86_64-dvd.iso /mnt/cdrom
-
 ```
 
 next, use the `rsync` command to create a copy of the ISO file's contents in a
