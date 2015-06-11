@@ -4,13 +4,13 @@ diff -Naur rhel-server-7.1-x86_64-orig/EFI/BOOT/grub.cfg rhel-server-7.1-x86_64-
 @@ -14,18 +14,18 @@
  insmod part_gpt
  insmod ext2
- 
+
 -set timeout=60
 +set timeout=5
  ### END /etc/grub.d/00_header ###
- 
+
  search --no-floppy --set=root -l 'RHEL-7.1 Server.x86_64'
- 
+
  ### BEGIN /etc/grub.d/10_linux ###
  menuentry 'Install Red Hat Enterprise Linux 7.1' --class fedora --class gnu-linux --class gnu --class os {
 -	linuxefi /images/pxeboot/vmlinuz inst.stage2=hd:LABEL=RHEL-7.1\x20Server.x86_64 quiet
@@ -31,16 +31,16 @@ diff -Naur rhel-server-7.1-x86_64-orig/isolinux/isolinux.cfg rhel-server-7.1-x86
  default vesamenu.c32
 -timeout 600
 +timeout 50
- 
+
  display boot.msg
- 
+
 @@ -61,13 +61,13 @@
  label linux
    menu label ^Install Red Hat Enterprise Linux 7.1
    kernel vmlinuz
 -  append initrd=initrd.img inst.stage2=hd:LABEL=RHEL-7.1\x20Server.x86_64 quiet
 +  append initrd=initrd.img inst.stage2=hd:LABEL=RHEL-7.1\x20Server.x86_64
- 
+
 -label check
 -  menu label Test this ^media & install Red Hat Enterprise Linux 7.1
 +label unattended
@@ -49,9 +49,9 @@ diff -Naur rhel-server-7.1-x86_64-orig/isolinux/isolinux.cfg rhel-server-7.1-x86
    kernel vmlinuz
 -  append initrd=initrd.img inst.stage2=hd:LABEL=RHEL-7.1\x20Server.x86_64 rd.live.check quiet
 +  append initrd=initrd.img inst.stage2=hd:LABEL=RHEL-7.1\x20Server.x86_64 ks=hd:LABEL=RHEL-7.1\x20Server.x86_64:/kickstart/ks-isolinux.cfg
- 
+
  menu separator # insert an empty line
- 
+
 diff -Naur rhel-server-7.1-x86_64-orig/kickstart/ks-isolinux.cfg rhel-server-7.1-x86_64-customized/kickstart/ks-isolinux.cfg
 --- rhel-server-7.1-x86_64-orig/kickstart/ks-isolinux.cfg	1969-12-31 16:00:00.000000000 -0800
 +++ rhel-server-7.1-x86_64-customized/kickstart/ks-isolinux.cfg	2015-06-10 08:54:20.677063309 -0700
@@ -120,7 +120,7 @@ diff -Naur rhel-server-7.1-x86_64-orig/kickstart/ks-uefi.cfg rhel-server-7.1-x86
 +# Root password
 +rootpw --iscrypted $6$8z2.xKRx6YdOvRDP$BwfVHPhTed9HtUA3oBJM.Y0tVppkzZLloOj5TkKojWgKsG4BJJaiM/bbQioqxUbuIaSKTMQ4aOvJG2FB9oVBS.
 +# Network information
-+network  --bootproto=static --device=enp0s25 --gateway=172.17.16.1 --ip=172.17.16.11 --nameserver=172.17.10.22 --netmask=255.255.255.0 --onboot=on --ipv6=auto --hostname=localhost.localdomain
++network  --bootproto=static --gateway=172.17.16.1 --ip=172.17.16.11 --nameserver=172.17.10.22 --netmask=255.255.255.0 --onboot=on --ipv6=auto --hostname=localhost.localdomain
 +# System authorization information
 +auth --enableshadow --passalgo=sha512
 +# System timezone
