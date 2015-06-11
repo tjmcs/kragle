@@ -2,7 +2,7 @@
 
 This project contains the files, scripts, and documentation for the process used
 to in the Automation 2.0 project to build out the **Automation Node**. There is
-one automation node per **Pod** (where a pod is  logical group of racks that are
+one automation node per **Pod** (where a pod is logical group of racks that are
 connected to each other in the datacenter network), and that node is is the
 node that contains all of the dependencies necessary to:
 
@@ -10,7 +10,6 @@ node that contains all of the dependencies necessary to:
 discovery is driven by the Hanlon instance that is running on the automation
 node (and a default, discover-only policy that has been added to that Hanlon
 instance).
-
 * **Provision** new operating systems or hypervisors to those nodes. This
 process of policy-based provisioning is driven using Ansible and Hanlon, with
 Ansible creating the policies necessary to provision the right OS/hypervisor to
@@ -31,18 +30,18 @@ sections that follow, we describe just such a process.
 
 RedHat Enterprise Linux (RHEL) will be used as the base OS for our automation
 nodes. Our automation nodes are actually Intel NUCs, but any server that
-supports RHEL-7.1 as an operating system and that is attached to the management
+supports RHEL as an operating system and that is attached to the management
 network of the pod should be useable for this purpose. To avoid dependencies on
 other servers that may or may not exist in the datacenter yet (it can't be
 turtles all the way down, after all), we install an operating system onto these
 automation nodes using an unattended install from an ISO that has been burned to
 USB thumb drive. In this section of document, we describe how to build that
-thumb drive with a few basic Linux commands and a RHEL-7.1 server ISO (which we
+thumb drive with a few basic Linux commands and a RHEL server ISO (which we
 downloaded directly from RedHat).
 
 ### Step 1: Construct an editable copy of the RHEL-7.1 ISO
 
-The first step in this process is to modify the standard RHEL-7.1 ISO so that it
+The first step in this process is to modify the standard RHEL ISO so that it
 contains a couple of kickstart files and it is setup to perform an unattended
 install using one of those kickstart files by default. The kickstart file that
 is actually used will differ depending on whether the thumb drive is beind used
@@ -51,9 +50,9 @@ because what we feel to be a more suitable, non-default, partitioning table is
 used in our kickstart file and the requirements for a legacy boot system
 differ from those for an EFI-boot system).
 
-To modify the files we need to modify in the RHEL-7.1 ISO, we first need to
-unpack the RHEL-7.1 ISO into a local directory (so that we can edit those
-files). First, mount the RHEL-7.1 ISO file locally (here, we're going to assume it's
+To modify the files we need to modify in the RHEL ISO, we first need to
+unpack the RHEL ISO into a local directory (so that we can edit those
+files). First, mount the RHEL ISO file locally (here, we're going to assume it's
 mounted under the `/mnt/cdrom` directory, it may be different on your Linux
 system):
 
@@ -62,9 +61,8 @@ mount -o loop rhel-server-7.1-x86_64-dvd.iso /mnt/cdrom
 
 ```
 
-next, use the `rsync` command to create a copy of the ISO file's contents in the
-directory we just created (we're showing partial output in the example shown
-here):
+next, use the `rsync` command to create a copy of the ISO file's contents in a
+local directory (we're only showing partial output in this example):
 
 ```bash
 $ rsync -avz /mnt/cdrom/ ./rhel-server-7.1-x86_64-customized
@@ -91,43 +89,45 @@ total size is 3,984,379,789  speedup is 1.03
 $
 ```
 
-Now that we have a copy of the contents of the RHEL-7.1 ISO has been unpacked,
+Now that we have a copy of the contents of the RHEL ISO available locally,
 we can proceed with the remastering process.
 
 ### Step 2: Modifying the standard RHEL-7.1 ISO to use a kickstart file by default
 
 Adding support for use of a kickstart file during the install process (when
 booting up and installing from the thumb drive that we're creating) is a
-simple, but poorly documented process. It's made even more difficult by the
-fact that we need to support both legacy (isolinux) and EFI-based systems
-with our thumb drive. The RHEL-7.1 ISO supports both, so we'll need to ensure
-that we maintain that support in the remastered ISO that we burn to our
+simple, but poorly documented process. This is especially true when you consider
+that we need to support booting of both legacy (isolinux) and EFI-based systems
+using the image we're building. The RHEL ISO supports both, so we'll need to
+ensure that we maintain that support in the remastered ISO that we burn to our
 thumb drive.
 
-The first thing we need to do is to create a couple of kickstart files (one
-for legacy/isolinux systems and one for EFI-based systems). While these
-kickstart files only differ by a few lines (basically an extra partition
-is needed for the EFI-based systems), there really is no simple way to combine
-them into a single kickstart file, so we have constructed two of them
-(they can be found in the `kickstart-files` subdirectory in this repository).
+The first thing we need to do is to create a pair of kickstart files (one for
+legacy/isolinux systems and one for EFI-based systems). While these kickstart
+files only differ by a few lines (basically an extra partition is needed to
+successfully boot and install RHEL to an EFI-based system), there really is no
+simple way to combine them into a single kickstart file. As sucy, we have
+constructed two separate kickstart files (which can be found in the
+[kickstart-files](kickstart-files) subdirectory in this repository).
 
-With our two new kickstart files in place, we're ready to start modifying our
-copy of the contents of the RHEL-7.1 ISO to make use of these two new
-kickstart files. The modifications we make will be modifications to the
-`./rhel-server-7.1-x86_64-customized/isolinux/isolinux.cfg` and
+Once we've added those two kickstart files to our working directory (we place
+them into a `kickstart` subdirectory), we can start modifying the contents of
+our working directory so that the remastered ISO will make use of these
+kickstart files during the boot and installation process. This requires
+modifications to the `./rhel-server-7.1-x86_64-customized/isolinux/isolinux.cfg` and
 `./rhel-server-7.1-x86_64-customized/EFI/BOOT/grub.cfg` files. In both cases,
 we need to add an argument to ensure that one of the boot options presented by
-the menus defined in those two files (the first is used for legacy booting, they
-second for EFI booting) support the kickstart files we'll be including in our
-remastered.
+the menus defined in those two files both provide an option that uses the kickstart
+files we just added to our working directory.
 
 It should be noted that we'll be making our changes to the second menu item
-defined in both of these files (that's the default menu item for all RHEL-7.1
-ISOs, so we want to maintain this behavior).  To make this process easier to
-understand, we've actually created a 'patch' file that can be used to perform
-all of these changes in a single command. That patch file can be found
-[here](patch-files/iso-mods.patch), and here's an example of using that patch
-file to update the copy of the ISO we created (above):
+defined in both of these files (that's the default menu item for all RHEL
+ISOs, so we want to maintain this behavior). Also, we've actually created a 'patch'
+file that can be used to perform all of these changes in a single command so that
+the process of modifying the stock RHEL ISO is as simple as possible. That patch
+file can be found [here](patch-files/iso-mods.patch), and here's an example of
+how you could use that patch file locally (assuming it is located in the same
+directory as the working directory that we created with our `rsync` command, above):
 
 ```bash
 $ cd rhel-server-7.1-x86_64-customized
@@ -205,13 +205,15 @@ At this point, we're almost done. Unfortunately, the changes that we made
 to the `/EFI/BOOT/grub.cfg` file in our ISO will not appear in the UEFI-boot
 process without one more change (this is because the `isohybrid` command we ran,
 above, created a new UEFI-bootable partition in our remastered ISO file, but
-it reset the grub.cfg file to it's default behavior in the process). To resolve
-this we simply have to mount the partition that was added, then copy over the
-appropriate file from our working directory. Of course, to mount the new
-partitions we've added to the thumb drive, we need to eject it and re-mount
-it (to force a detection of the new partitions). That is easily accomplished
-with the following pair of commands (assuming your thumb drive has been
-inserted into an appropriate USB port and was detected as `/dev/sdc`):
+it reset the grub.cfg file in that partition to it's default behavior in the
+process). To resolve this we simply have to mount the partition that was added,
+then copy over the appropriate file from our working directory.
+
+Of course, to mount the new partitions that were added to the thumb drive, by our
+`dd` command (above), we need to eject it and re-mount the thumb drive (to force
+the system to detect the new partitions). That is easily accomplished with the
+following pair of commands (assuming your thumb drive has been inserted into an
+appropriate USB port and was detected as `/dev/sdc`):
 
 ```bash
 $ eject /dev/sdc
