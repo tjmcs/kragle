@@ -26,7 +26,7 @@ use to discover and provision an operating system to a node, we need a
 semi-automated process that can be used to create a new automation node. In the
 sections that follow, we describe just such a process.
 
-## Building a 'boostrap' thumb drive
+## Building a 'bootstrap' thumb drive
 
 RedHat Enterprise Linux (RHEL) will be used as the base OS for our automation
 nodes. Our automation nodes are actually Intel NUCs, but any server that
@@ -105,7 +105,7 @@ The first thing we need to do is to create a pair of kickstart files (one for
 legacy/isolinux systems and one for EFI-based systems). While these kickstart
 files only differ by a few lines (basically an extra partition is needed to
 successfully boot and install RHEL to an EFI-based system), there really is no
-simple way to combine them into a single kickstart file. As sucy, we have
+simple way to combine them into a single kickstart file. As such, we have
 constructed two separate kickstart files (which can be found in the
 [kickstart-files](kickstart-files) subdirectory in this repository).
 
