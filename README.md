@@ -26,7 +26,7 @@ use to discover and provision an operating system to a node, we need a
 semi-automated process that can be used to create a new automation node. In the
 sections that follow, we describe just such a process.
 
-## Building a 'bootstrap' thumb drive
+## Building a 'bootstrap' thumb drive for unattended RHEL 7 Server deployments
 
 RedHat Enterprise Linux (RHEL) will be used as the base OS for our automation
 nodes. Our automation nodes are actually Intel NUCs, but any server that
@@ -230,3 +230,133 @@ $ eject /dev/sdc
 
 You can now remove the thumb drive from your Linux system and use it to provision
 a RHEL-7.1 OS any new automation nodes you might want to build.
+
+## Building a 'bootstrap' thumb drive for unattended RHEL 7 Atomic Host deployments
+
+The instructions for building a bootstrap thumb drive for RHEL 7 Atomic Host (or Atomic)
+deployments are nearly identical to those outlined above for building a bootstrap thumb
+drive for RHEL 7 Server deployments. As was the case with building a RHEL 7 Server
+boostrap thumb drive, the process starts with mounting the RHEL 7 Atomic Host ISO
+and rsync'ing it over to a local directory.
+
+```bash
+$ mount -o loop ~/transfer/rhel-atomic-installer-7.1-1.x86_64.iso /mnt/cdrom
+mount: block device /mnt/hgfs/transfer/rhel-atomic-installer-7.1-1.x86_64.iso is write-protected, mounting read-only
+$ rsync -avz /mnt/cdrom/ ./rhel-atomic-installer-7.1.1-x86_64-customized
+sending incremental file list
+created directory ./rhel-atomic-installer-7.1.1-x86_64-customized
+./
+EFI/
+EFI/BOOT/
+EFI/BOOT/BOOTX64.efi
+EFI/BOOT/MokManager.efi
+EFI/BOOT/TRANS.TBL
+EFI/BOOT/grub.cfg
+EFI/BOOT/grubx64.efi
+EFI/BOOT/fonts/
+EFI/BOOT/fonts/TRANS.TBL
+EFI/BOOT/fonts/unicode.pf2
+LiveOS/
+LiveOS/TRANS.TBL
+LiveOS/squashfs.img
+images/
+images/TRANS.TBL
+images/efiboot.img
+images/pxeboot/
+images/pxeboot/TRANS.TBL
+images/pxeboot/initrd.img
+images/pxeboot/upgrade.img
+images/pxeboot/vmlinuz
+isolinux/
+isolinux/TRANS.TBL
+isolinux/boot.cat
+isolinux/boot.msg
+isolinux/grub.conf
+isolinux/initrd.img
+isolinux/isolinux.bin
+isolinux/isolinux.cfg
+isolinux/memtest
+isolinux/splash.png
+isolinux/upgrade.img
+isolinux/vesamenu.c32
+isolinux/vmlinuz
+
+sent 721,696,315 bytes  received 648 bytes  19,772,519.53 bytes/sec
+total size is 729,764,374  speedup is 1.01
+$
+```
+
+Once the contents are in a local directory, simply change directories into the
+local directory we just created with our `rsync` command (above) and apply the
+patch file from this project to create the appropriate kickstart file and make
+the modifications to the `isolinux/isolinux.cfg` and `EFI/BOOT/grub.cfg` files
+that are necessary to automatically trigger an unattended Atomic install on the
+host system from the ISO we are building.
+
+```bash
+$ cd
+$ patch -p1 < ../iso-mods-atomic.patch
+patching file EFI/BOOT/grub.cfg
+patching file isolinux/isolinux.cfg
+patching file kickstart/ks-atomic.cfg
+$ cd ..
+$
+```
+
+Then use the `genisoimage` and `isohybrid` commands (as was the case in the
+RHEL 7 server example, above) to rebuild a local ISO file that contains the
+modifications we made to the original RHEL 7 Atomic Host ISO:
+
+```bash
+$ genisoimage -untranslated-filenames -volid 'RHEL Atomic Host 7 x86_64' -J -joliet-long -rational-rock -translation-table -input-charset utf-8 -x ./lost+found -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e images/efiboot.img -no-emul-boot -o rhel-atomic-installer-7.1.1-x86_64-custom.iso -T ./rhel-atomic-installer-7.1.1-x86_64-customized/ 2>&1 | tee t.t
+Warning: creating filesystem that does not conform to ISO-9660.
+Size of boot image is 4 sectors -> No emulation
+Size of boot image is 12608 sectors -> No emulation
+  1.40% done, estimate finish Thu Jul  2 12:46:02 2015
+  2.81% done, estimate finish Thu Jul  2 12:46:02 2015
+  4.21% done, estimate finish Thu Jul  2 12:46:02 2015
+  5.61% done, estimate finish Thu Jul  2 12:46:02 2015
+  7.02% done, estimate finish Thu Jul  2 12:46:02 2015
+  8.42% done, estimate finish Thu Jul  2 12:46:02 2015
+  .
+  .
+  .
+  96.76% done, estimate finish Thu Jul  2 12:46:06 2015
+  98.17% done, estimate finish Thu Jul  2 12:46:06 2015
+  99.57% done, estimate finish Thu Jul  2 12:46:06 2015
+Total translation table size: 9127
+Total rockridge attributes bytes: 4569
+Total directory bytes: 16384
+Path table size(bytes): 126
+Max brk space used 1b000
+356549 extents written (696 MB)
+$ isohybrid -u rhel-atomic-installer-7.1.1-x86_64-custom.iso
+$
+```
+
+When running these commands, it is important to keep the Volume ID used in the
+`genisoimage` command consistent with the label used in the patch file, so don't
+change the `-volid` value shown in the example, above.
+
+Finally, we `dd` the resulting file to the thumb drive, mount the second partition
+from that drive, copy over the `EFI/BOOT/grub.cfg` file that we modified to that
+partition, and unmount the thumb drive.
+
+```bash
+$ dd if=rhel-atomic-installer-7.1.1-x86_64-custom.iso of=/dev/sdb bs=1024k
+697+0 records in
+697+0 records out
+730857472 bytes (731 MB) copied, 73.5738 s, 9.9 MB/s
+$ eject /dev/sdb
+$ eject -t /dev/sdb
+$ mount /dev/sdb2 /mnt/usb
+$ cp ./rhel-atomic-installer-7.1.1-x86_64-customized/EFI/BOOT/grub.cfg /mnt/usb/EFI/BOOT/grub.cfg
+$ umount /mnt/usb
+$ eject /dev/sdb
+$
+```
+Keep in mind that the device the thumb drive is detected as on your system
+may change (in the examples shown above the drive was detected as either `/dev/sdb`
+or `/dev/sdc`), so the commands shown above may change slightly.
+
+Your RHEL 7 Atomic Host thumb drive is now ready for use.
