@@ -240,8 +240,8 @@ boostrap thumb drive, the process starts with mounting the RHEL 7 Atomic Host IS
 and rsync'ing it over to a local directory.
 
 ```bash
-$ mount -o loop ~/transfer/rhel-atomic-installer-7.1-1.x86_64.iso /mnt/cdrom
-mount: block device /mnt/hgfs/transfer/rhel-atomic-installer-7.1-1.x86_64.iso is write-protected, mounting read-only
+$ mount -o loop rhel-atomic-installer-7.1-1.x86_64.iso /mnt/cdrom
+mount: block device rhel-atomic-installer-7.1-1.x86_64.iso is write-protected, mounting read-only
 $ rsync -avz /mnt/cdrom/ ./rhel-atomic-installer-7.1.1-x86_64-customized
 sending incremental file list
 created directory ./rhel-atomic-installer-7.1.1-x86_64-customized
@@ -294,7 +294,7 @@ that are necessary to automatically trigger an unattended Atomic install on the
 host system from the ISO we are building.
 
 ```bash
-$ cd
+$ cd ./rhel-atomic-installer-7.1.1-x86_64-customized
 $ patch -p1 < ../iso-mods-atomic.patch
 patching file EFI/BOOT/grub.cfg
 patching file isolinux/isolinux.cfg
