@@ -1,0 +1,88 @@
+diff -Naur rhel-atomic-installer-7.1.1-x86_64-orig/EFI/BOOT/grub.cfg rhel-atomic-installer-7.1.1-x86_64-customized/EFI/BOOT/grub.cfg
+--- rhel-atomic-installer-7.1.1-x86_64-orig/EFI/BOOT/grub.cfg		2015-04-13 12:47:08.000000000 -0700
++++ rhel-atomic-installer-7.1.1-x86_64-customized/EFI/BOOT/grub.cfg	2015-07-01 13:43:51.430401772 -0700
+@@ -14,18 +14,18 @@
+ insmod part_gpt
+ insmod ext2
+
+-set timeout=60
++set timeout=5
+ ### END /etc/grub.d/00_header ###
+
+ search --no-floppy --set=root -l 'RHEL Atomic Host 7 x86_64'
+
+ ### BEGIN /etc/grub.d/10_linux ###
+ menuentry 'Install RHEL Atomic Host 7' --class fedora --class gnu-linux --class gnu --class os {
+-	linuxefi /images/pxeboot/vmlinuz inst.stage2=hd:LABEL=RHEL\x20Atomic\x20Host\x207\x20x86_64 quiet
++	linuxefi /images/pxeboot/vmlinuz inst.stage2=hd:LABEL=RHEL\x20Atomic\x20Host\x207\x20x86_64
+ 	initrdefi /images/pxeboot/initrd.img
+ }
+-menuentry 'Test this media & install RHEL Atomic Host 7' --class fedora --class gnu-linux --class gnu --class os {
+-	linuxefi /images/pxeboot/vmlinuz inst.stage2=hd:LABEL=RHEL\x20Atomic\x20Host\x207\x20x86_64 rd.live.check quiet
++menuentry 'Automated Install of RHEL Atomic Host 7' --class fedora --class gnu-linux --class gnu --class os {
++	linuxefi /images/pxeboot/vmlinuz inst.stage2=hd:LABEL=RHEL\x20Atomic\x20Host\x207\x20x86_64 inst.ks=hd:LABEL=RHEL\x20Atomic\x20Host\x207\x20x86_64:/kickstart/ks-atomic.cfg
+ 	initrdefi /images/pxeboot/initrd.img
+ }
+ submenu 'Troubleshooting -->' {
+diff -Naur rhel-atomic-installer-7.1.1-x86_64-orig/isolinux/isolinux.cfg rhel-atomic-installer-7.1.1-x86_64-customized/isolinux/isolinux.cfg
+--- rhel-atomic-installer-7.1.1-x86_64-orig/isolinux/isolinux.cfg	2015-04-13 12:47:08.000000000 -0700
++++ rhel-atomic-installer-7.1.1-x86_64-customized/isolinux/isolinux.cfg	2015-07-01 13:58:46.604761508 -0700
+@@ -1,5 +1,5 @@
+ default vesamenu.c32
+-timeout 600
++timeout 50
+
+ display boot.msg
+
+@@ -61,13 +61,13 @@
+ label linux
+   menu label ^Install RHEL Atomic Host 7
+   kernel vmlinuz
+-  append initrd=initrd.img inst.stage2=hd:LABEL=RHEL\x20Atomic\x20Host\x207\x20x86_64 quiet
++  append initrd=initrd.img inst.stage2=hd:LABEL=RHEL\x20Atomic\x20Host\x207\x20x86_64
+
+ label check
+-  menu label Test this ^media & install RHEL Atomic Host 7
++  menu label ^Automated Install of RHEL Atomic Host 7
+   menu default
+   kernel vmlinuz
+-  append initrd=initrd.img inst.stage2=hd:LABEL=RHEL\x20Atomic\x20Host\x207\x20x86_64 rd.live.check quiet
++  append initrd=initrd.img inst.stage2=hd:LABEL=RHEL\x20Atomic\x20Host\x207\x20x86_64 ks=hd:LABEL=RHEL\x20Atomic\x20Host\x207\x20x86_64:/kickstart/ks-atomic.cfg
+
+ menu separator # insert an empty line
+
+diff -Naur rhel-atomic-installer-7.1.1-x86_64-orig/kickstart/ks-atomic.cfg rhel-atomic-installer-7.1.1-x86_64-customized/kickstart/ks-atomic.cfg
+--- rhel-atomic-installer-7.1-x86_64-orig/kickstart/ks-atomic.cfg		1969-12-31 16:00:00.000000000 -0800
++++ rhel-atomic-installer-7.1.1-x86_64-customized/kickstart/ks-atomic.cfg	2015-07-01 14:06:03.020520567 -0700
+@@ -0,0 +1,31 @@
++#version=RHEL7 Atomic Host
++
++# install a fresh system
++install
++# Use CDROM installation media
++cdrom
++# Perform a text-based install
++text
++# System language
++lang en_US.UTF-8
++# Keyboard layouts
++keyboard --vckeymap=us --xlayouts='us'
++# Root password
++rootpw --iscrypted $6$8z2.xKRx6YdOvRDP$BwfVHPhTed9HtUA3oBJM.Y0tVppkzZLloOj5TkKojWgKsG4BJJaiM/bbQioqxUbuIaSKTMQ4aOvJG2FB9oVBS.
++# Network information
++network --device=enp0s25 --bootproto=static --gateway=172.17.16.1 --ip=172.17.16.11 --nameserver=172.17.10.22 --netmask=255.255.255.0 --onboot=on --ipv6=auto --hostname=localhost.localdomain
++# System authorization information
++auth --enableshadow --passalgo=sha512
++# System timezone
++timezone America/New_York --isUtc
++# Ignore all but the first disk (sda) during the install
++ignoredisk --only-use=sda
++# Partition clearing information
++clearpart --drives=sda --all
++zerombr
++# Use automated partitioning scheme
++autopart
++# poweroff automatically at the end of the installation process
++poweroff
++# include defaults from anaconda filesystem
++%include /usr/share/anaconda/interactive-defaults.ks
