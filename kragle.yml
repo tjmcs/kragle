@@ -56,11 +56,6 @@
       - /opt/hanlon/image
       - /opt/deploy
 
-  - name: get the hanlon microkernel image
-    get_url:
-      url: https://github.com/csc/Hanlon-Microkernel/releases/download/v2.0.1/hnl_mk_prod-image.2.0.1.iso
-      dest: /opt/hanlon/image
-
   - name: copy iptables config file
     copy:
       src: files/iptables
