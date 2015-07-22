@@ -6,7 +6,7 @@
 
   - name: install updates
     yum:
-      name: *
+      name: "*"
       state: latest
 
   - name: install support packages
