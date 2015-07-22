@@ -4,6 +4,11 @@
   gather_facts: false
   tasks:
 
+  - name: install updates
+    yum:
+      name: *
+      state: latest
+
   - name: install support packages
     yum: pkg={{item}} state=present
     with_items:
@@ -15,6 +20,12 @@
       - python-pip
       - sshpass
       - iptables-services
+      - libvirt
+      - libvirt-client
+      - libvirt-python
+      - qemu-img
+      - qemu-kvm
+      - bridge-utils
 
   - name: install docker-py
     pip:
@@ -31,7 +42,7 @@
   - name: disable firewalld
     service:
       name: firewalld
-      state: absent
+      state: stopped
       enabled: no
 
   - name: create directories for hanlon
@@ -68,7 +79,7 @@
     git:
       repo: "{{item.repo}}"
       dest: "/root/{{item.name}}"
-      accept_hostkey: true
+      accept_hostkey: yes
     with_items:
       - {name: "wiley", repo: "git://github.com/csc/wiley"}
       - {name: "slimer", repo: "git://github.com/csc/slimer"}
