@@ -16,8 +16,7 @@
       - iptables-services
 
   - name: install docker-py
-    pip: name=docker-py state=present
-    extra_args: update
+    pip: name=docker-py state=present extra_args=update
 
   - name: copy .ssh/config
     copy: source=/files/config dest=~/.ssh/config
