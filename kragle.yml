@@ -66,7 +66,7 @@
 
   - name: clone repos from git
     git:
-      repo: "git:{{item.repo}}"
+      repo: "{{item.repo}}"
       dest: "/root/{{item.name}}"
       accept_hostkey: true
     with_items:
