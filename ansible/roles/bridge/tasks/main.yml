@@ -25,6 +25,7 @@
   async: 1
   poll: 0
   ignore_errors: true
+  when: not use_packer
 
 - name: wait for network to restart
   local_action:
@@ -32,6 +33,7 @@
     host: "{{br_if.ipaddr}}"
     port: 22
     state: started
+  when: not use_packer
 
 - name: disable NetworkManager
   service:

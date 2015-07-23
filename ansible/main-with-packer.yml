@@ -4,5 +4,5 @@
   gather_facts: true
   roles:
     - base
-    - bridge
+    - { role: bridge, use_packer: true }
     - kragle-packer
