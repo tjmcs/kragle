@@ -1,0 +1,41 @@
+---
+- name: packages to install
+  yum:
+    pkg: "{{ item }}"
+    state: latest
+  with_items:
+    - curl
+    - openssh-server
+    - ca-certificates
+    - grub2-tools
+
+- name: copy grub defaults
+  copy:
+    src: grub
+    dest: /etc/default/grub  
+
+- name: grub2 mkconfig
+  command: grub2-mkconfig -o /boot/grub2/grub.cfg
+
+- name: yum clean all
+  command: yum clean all
+
+#- name: network script remove UUID
+#  command: "sed -i '/UUID/d' /etc/sysconfig/network-scripts/ifcfg-e*"
+
+#- name: network script remove HWADDR
+#  command: "sed -i '/HWADDR/d' /etc/sysconfig/network-scripts/ifcfg-e*"
+
+- name: write to end of disk
+  shell: dd if=/dev/zero of=/EMPTY bs=1M
+  ignore_errors: true
+
+# Using RAW module because the filesystem will be
+# full and Ansible will not be able to copy Python
+# libraries to the instance
+
+- name: delete EMPTY
+  raw: rm -f /EMPTY
+
+- name: sync filesystem
+  command: sync
