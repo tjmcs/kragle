@@ -1,0 +1,6 @@
+---
+- name: Setup kragle
+  hosts: all
+  gather_facts: true
+  roles:
+    - base
