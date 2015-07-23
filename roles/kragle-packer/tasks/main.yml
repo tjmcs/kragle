@@ -4,7 +4,6 @@
     pkg: "{{ item }}"
     state: latest
   with_items:
-    - wget
     - curl
     - openssh-server
     - ca-certificates
