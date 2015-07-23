@@ -1,0 +1,13 @@
+DEVICE=br0
+NAME=br0
+TYPE=Bridge
+ONBOOT=yes
+BOOTPROTO=static
+DEFROUTE=yes
+NM_CONTROLLED=no
+IPADDR={{br_if.ipaddr}}
+NETMASK={{br_if.netmask}}
+GATEWAY={{br_if.gateway}}
+DNS1={{br_if.dns1}}
+DNS2={{br_if.dns2}}
+

@@ -1,0 +1,45 @@
+---
+- name: deploy network bridge interface config file
+  template:
+    src: ifcfg_br0.j2
+    dest: /etc/sysconfig/network-scripts/ifcfg-br0
+
+- name: deploy network interface config file
+  template:
+    src: ifcfg_physical.j2
+    dest: /etc/sysconfig/network-scripts/ifcfg-{{ansible_default_ipv4.interface}}
+
+- name: copy sysctl.conf to /etc
+  copy:
+    src: sysctl.conf
+    dest: /etc/sysctl.conf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: apply the sysctl.conf config
+  command: sysctl -p /etc/sysctl.conf
+
+- name: restart networking
+  shell: sleep 2 && nmcli connection reload && systemctl start network
+  async: 1
+  poll: 0
+  ignore_errors: true
+
+- name: wait for network to restart
+  local_action:
+    module: wait_for
+    host: "{{br_if.ipaddr}}"
+    port: 22
+    state: started
+
+- name: disable NetworkManager
+  service:
+    name: NetworkManager
+    state: stopped
+    enabled: no
+
+- name: restart libvirtd
+  service:
+    name: libvirtd
+    state: restarted
