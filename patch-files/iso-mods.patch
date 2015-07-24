@@ -55,7 +55,7 @@ diff -Naur rhel-server-7.1-x86_64-orig/isolinux/isolinux.cfg rhel-server-7.1-x86
 diff -Naur rhel-server-7.1-x86_64-orig/kickstart/ks-isolinux.cfg rhel-server-7.1-x86_64-customized/kickstart/ks-isolinux.cfg
 --- rhel-server-7.1-x86_64-orig/kickstart/ks-isolinux.cfg	1969-12-31 16:00:00.000000000 -0800
 +++ rhel-server-7.1-x86_64-customized/kickstart/ks-isolinux.cfg	2015-06-10 08:54:20.677063309 -0700
-@@ -0,0 +1,45 @@
+@@ -0,0 +1,53 @@
 +#version=RHEL7
 +
 +# install a fresh system
@@ -71,7 +71,7 @@ diff -Naur rhel-server-7.1-x86_64-orig/kickstart/ks-isolinux.cfg rhel-server-7.1
 +# Root password
 +rootpw --iscrypted $6$8z2.xKRx6YdOvRDP$BwfVHPhTed9HtUA3oBJM.Y0tVppkzZLloOj5TkKojWgKsG4BJJaiM/bbQioqxUbuIaSKTMQ4aOvJG2FB9oVBS.
 +# Network information
-+network --device=enp0s25 --bootproto=static --gateway=172.17.16.1 --ip=172.17.16.11 --nameserver=172.17.10.22 --netmask=255.255.255.0 --onboot=on --ipv6=auto --hostname=localhost.localdomain
++network --hostname=localhost.localdomain 
 +# System authorization information
 +auth --enableshadow --passalgo=sha512
 +# System timezone
@@ -101,10 +101,19 @@ diff -Naur rhel-server-7.1-x86_64-orig/kickstart/ks-isolinux.cfg rhel-server-7.1
 +# add 'kdump' add-on to the install
 +%addon com_redhat_kdump --enable --reserve-mb='auto'
 +%end
++# install epel-release, ansible and git and clone the kragle source repository
++%post --log=/root/ks-post.log
++/usr/sbin/subscription-manager register --username <rhn_username> --password <rhn_password> --autosubscribe
++/usr/sbin/subscription-manager repos --enable=rhel-7-server-extras-rpms
++yum -y install https://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm
++yum -y install git ansible
++git clone https://git_username:git_password@github.com/csc/kragle
++ansible-playbook -i localhost, kragle/kragle.yml
++%end
 diff -Naur rhel-server-7.1-x86_64-orig/kickstart/ks-uefi.cfg rhel-server-7.1-x86_64-customized/kickstart/ks-uefi.cfg
 --- rhel-server-7.1-x86_64-orig/kickstart/ks-uefi.cfg	1969-12-31 16:00:00.000000000 -0800
 +++ rhel-server-7.1-x86_64-customized/kickstart/ks-uefi.cfg	2015-06-10 08:52:50.479901159 -0700
-@@ -0,0 +1,46 @@
+@@ -0,0 +1,54 @@
 +#version=RHEL7
 +
 +# install a fresh system
@@ -120,7 +129,7 @@ diff -Naur rhel-server-7.1-x86_64-orig/kickstart/ks-uefi.cfg rhel-server-7.1-x86
 +# Root password
 +rootpw --iscrypted $6$8z2.xKRx6YdOvRDP$BwfVHPhTed9HtUA3oBJM.Y0tVppkzZLloOj5TkKojWgKsG4BJJaiM/bbQioqxUbuIaSKTMQ4aOvJG2FB9oVBS.
 +# Network information
-+network --device=enp0s25 --bootproto=static --gateway=172.17.16.1 --ip=172.17.16.11 --nameserver=172.17.10.22 --netmask=255.255.255.0 --onboot=on --ipv6=auto --hostname=localhost.localdomain
++network --hostname=localhost.localdomain 
 +# System authorization information
 +auth --enableshadow --passalgo=sha512
 +# System timezone
@@ -150,4 +159,13 @@ diff -Naur rhel-server-7.1-x86_64-orig/kickstart/ks-uefi.cfg rhel-server-7.1-x86
 +%end
 +# add 'kdump' add-on to the install
 +%addon com_redhat_kdump --enable --reserve-mb='auto'
++%end
++# install epel-release, ansible and git and clone the kragle source repository
++%post --log=/root/ks-post.log
++/usr/sbin/subscription-manager register --username <rhn_username> --password <rhn_password> --autosubscribe
++/usr/sbin/subscription-manager repos --enable=rhel-7-server-extras-rpms
++yum -y install https://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm
++yum -y install git ansible
++git clone https://git_username:git_password@github.com/csc/kragle
++ansible-playbook -i localhost, kragle/kragle.yml
 +%end
