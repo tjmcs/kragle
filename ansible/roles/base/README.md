@@ -1,38 +1,27 @@
-Role Name
+Base
 =========
 
-A brief description of the role goes here.
+This role will prepare the kragle autodeploynode with the all the resources needed to deploy Red Hat OpenStack on RHEL. It will install the necessary packages, configure them and clone the required git repositories.
 
 Requirements
 ------------
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+The role requires a pre-installed version of RHEL with internet connectivity performed from the instructions and kickstart files provided in this repository.
 
 Role Variables
 --------------
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+The variables for this role come from facts gathered by ansible and vars/main.yml. The vars/main.yml variables need to be edited as needed.
 
 Dependencies
 ------------
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+The role depends on the requirements listed above.
 
-Example Playbook
-----------------
+Playbook
+--------
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+The role is included in the main.yml in kragle/ansible
+From the root directory of the kragle repo
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
-
-License
--------
-
-BSD
-
-Author Information
-------------------
-
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+    ansible-playbook ansible/main.yml

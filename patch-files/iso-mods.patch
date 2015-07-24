@@ -71,7 +71,7 @@ diff -Naur rhel-server-7.1-x86_64-orig/kickstart/ks-isolinux.cfg rhel-server-7.1
 +# Root password
 +rootpw --iscrypted $6$8z2.xKRx6YdOvRDP$BwfVHPhTed9HtUA3oBJM.Y0tVppkzZLloOj5TkKojWgKsG4BJJaiM/bbQioqxUbuIaSKTMQ4aOvJG2FB9oVBS.
 +# Network information
-+network --hostname=localhost.localdomain 
++network --hostname=localhost.localdomain
 +# System authorization information
 +auth --enableshadow --passalgo=sha512
 +# System timezone
@@ -129,7 +129,7 @@ diff -Naur rhel-server-7.1-x86_64-orig/kickstart/ks-uefi.cfg rhel-server-7.1-x86
 +# Root password
 +rootpw --iscrypted $6$8z2.xKRx6YdOvRDP$BwfVHPhTed9HtUA3oBJM.Y0tVppkzZLloOj5TkKojWgKsG4BJJaiM/bbQioqxUbuIaSKTMQ4aOvJG2FB9oVBS.
 +# Network information
-+network --hostname=localhost.localdomain 
++network --hostname=localhost.localdomain
 +# System authorization information
 +auth --enableshadow --passalgo=sha512
 +# System timezone
@@ -167,5 +167,5 @@ diff -Naur rhel-server-7.1-x86_64-orig/kickstart/ks-uefi.cfg rhel-server-7.1-x86
 +yum -y install https://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm
 +yum -y install git ansible
 +git clone https://git_username:git_password@github.com/csc/kragle
-+ansible-playbook -i localhost, kragle/kragle.yml
++ansible-playbook -i localhost, ansible/kragle/main.yml
 +%end
